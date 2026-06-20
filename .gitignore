@@ -9,3 +9,7 @@ __pycache__/
 .ipynb_checkpoints/
 venv/
 .venv/
+
+# 보고서 자료(제출용) - 공개 제외
+docs/*.docx
+docs/week1_report_content.md
