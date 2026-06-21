@@ -16,7 +16,7 @@ WD={"월":0,"화":1,"수":2,"목":3,"금":4,"토":5,"일":6}
 
 st.set_page_config(page_title="SeoulEVCheck", page_icon="⚡")
 st.title("⚡ SeoulEVCheck")
-st.caption("서울 전기차 충전 수요 예측 — 구·충전기·요일·월로 예상 일 충전량과 배달충전 우선지역을 보여줍니다.")
+st.caption("서울시 구별 전기차 충전 수요 예측 — 급속·완속 병목 지역과 인프라 사각지대를 식별하여 투자 우선순위를 지원합니다.")
 
 c1,c2,c3,c4=st.columns(4)
 gu=c1.selectbox("구",GU,index=GU.index("강남구") if "강남구" in GU else 0)
@@ -37,6 +37,6 @@ if st.button("🔮 예측하기", type="primary"):
 st.divider()
 st.subheader("📊 구별 평균 일 충전량")
 st.bar_chart(gs.set_index("gu")["충전량"])
-st.subheader("🔥 충전 수요 핫스팟 TOP10 (배달충전 우선지역)")
+st.subheader("🔥 충전 수요 핫스팟 TOP10 (인프라 투자 우선 후보 지역)")
 st.dataframe(hs.head(10), use_container_width=True)
-st.caption("3주 로드맵: 1주 ML(현재) → 2주 DL(LSTM 시계열) → 3주 LLM(충전 어드바이저·RAG)")
+st.caption("로드맵: 1주 ML(현재) → 2주 DL(LSTM 시계열) → 3주 LLM(충전 인프라 어드바이저·RAG)")
