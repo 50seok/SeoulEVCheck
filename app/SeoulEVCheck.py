@@ -5,7 +5,7 @@ ROOT=Path(__file__).resolve().parent.parent; APP=Path(__file__).resolve().parent
 
 @st.cache_resource
 def load():
-    gm=joblib.load(ROOT/"models"/"xgb_gu.pkl")
+    gm=joblib.load(ROOT/"models"/"model_gu.pkl")
     gs=pd.read_csv(APP/"gu_summary.csv",encoding="utf-8-sig")
     hs=pd.read_csv(APP/"station_hotspot.csv",encoding="utf-8-sig")
     return gm,gs,hs

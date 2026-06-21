@@ -22,7 +22,47 @@ bullets(['전기차 보급 급증 → 충전 인프라 수요 예측·관리 필
          '활용: ①충전 인프라 투자 효율 ②전력 부하 관리(에너지 절감) ③운영 최적화',
          '향후 비전: 예측 수요 기반 충전 인프라 투자 우선순위 결정 → 충전 어드바이저(LLM·RAG)로 발전'])
 doc.add_heading('2.2 과제 범위',2)
-doc.add_paragraph('AI(데이터 정제·EDA·모델) / 시각화(Streamlit) / 테스트. 제외: 자율주행 구현, CNN/이미지, 동 단위 예측.')
+# (대분류, 중분류, 소분류, 내용) — 소분류 '' 이면 중분류 옆 내용 칸을 가로 병합
+scope_rows = [
+    ('데이터셋',    '전처리',        '데이터 수집',       '공공데이터포털 KEPCO 서울 충전 데이터 638,702건 수집'),
+    ('데이터셋',    '전처리',        '데이터 정제',       '음수·누락 등 오류 데이터 11,203건 제거'),
+    ('데이터셋',    '전처리',        '주소 처리',         '충전소 주소 → 자치구 자동 분류 (98.5%)'),
+    ('데이터셋',    'EDA 분석',      '분포 분석',         '충전량 분포 확인 (hist)'),
+    ('데이터셋',    'EDA 분석',      '상관관계 분석',     '항목 간 상관계수 산출 및 누수 특성 식별 (heatmap)'),
+    ('데이터셋',    'EDA 분석',      '구별 분석',         '수요 상위 구 파악 및 시각화 (barplot)'),
+    ('데이터셋',    'EDA 분석',      '충전기 유형 분석',  '급속·완속 평균 충전량 비교'),
+    ('AI 머신러닝', '모델 구축',     '',                  'XGBoost 기반 일별 충전량 예측 모델 설계'),
+    ('AI 머신러닝', '학습 및 예측',  '',                  '충전 특성 선택, 8:2 데이터 분리, 예측 및 결과 출력'),
+    ('AI 머신러닝', '분석',          '오차 분석',         'Actual vs Predicted 차이 분석 (scatter)'),
+    ('AI 머신러닝', '분석',          '중요도 분석',       '충전량 예측 기여도 인자 분석 (barplot)'),
+    ('AI 머신러닝', '모델 성능평가', '지표 계산',         'R², MAE 기반 모델 신뢰도 검증 (5회 교차검증)'),
+    ('AI 머신러닝', '프로토타이핑',  '',                  'Streamlit을 이용한 충전 수요 예측 웹 앱 개발'),
+]
+st = doc.add_table(rows=len(scope_rows)+1, cols=4)
+st.style = 'Table Grid'
+# 헤더: 텍스트 먼저 설정 후 병합
+hdr = st.rows[0]
+hdr.cells[0].text = '과제구분'
+hdr.cells[3].text = '내용'
+hdr.cells[0].merge(hdr.cells[2])
+# 데이터 행
+for i, (cat, mid, sub, cont) in enumerate(scope_rows):
+    ri = i + 1
+    row = st.rows[ri]
+    row.cells[0].text = cat
+    row.cells[1].text = mid
+    if sub:
+        row.cells[2].text = sub
+        row.cells[3].text = cont
+    else:
+        row.cells[2].text = cont
+        row.cells[2].merge(row.cells[3])
+# 세로 병합 (마지막에)
+st.cell(1,0).merge(st.cell(7,0))    # 데이터셋
+st.cell(8,0).merge(st.cell(13,0))   # AI 머신러닝
+st.cell(1,1).merge(st.cell(3,1))    # 전처리
+st.cell(4,1).merge(st.cell(7,1))    # EDA 분석
+st.cell(10,1).merge(st.cell(11,1))  # 분석
 doc.add_heading('2.3 추진 방법',2)
 doc.add_paragraph('DATA IMPORTING → 전처리 → 모델링(XGBoost) → 예측 → 시각화')
 doc.add_heading('3. 연구개발 주요 결과물',1)
@@ -37,7 +77,7 @@ doc.add_heading('③ 데이터 학습 및 모델 정의',2)
 doc.add_paragraph('예측 목표: 일별 충전량 · AI 모델: XGBoost · 검증: 학습/테스트 8:2 분할 + 5회 교차검증.')
 t=doc.add_table(rows=3,cols=5); t.style='Table Grid'
 hdr=['모델','기준 모델 정확도','AI 모델 정확도','교차검증 정확도','평균 오차(kWh)']
-data=[['구(거시)','0.761','0.787','0.768','216'],['충전소(미시)','0.485','0.571','0.570','52']]
+data=[['구(거시) — RandomForest','0.761','0.766','0.772','150'],['충전소(미시) — GradientBoosting','0.485','0.556','0.346','37']]
 for j,h in enumerate(hdr): t.rows[0].cells[j].text=h
 for i,r in enumerate(data):
     for j,v in enumerate(r): t.rows[i+1].cells[j].text=v
