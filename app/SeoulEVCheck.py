@@ -1,4 +1,5 @@
-import streamlit as st, pandas as pd, numpy as np, joblib
+import streamlit as st, pandas as pd, numpy as np, joblib, requests
+import plotly.express as px
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent.parent; APP=Path(__file__).resolve().parent
 
@@ -34,9 +35,43 @@ if st.button("🔮 예측하기", type="primary"):
     rank=int((gs["충전량"]>=pred).sum())
     st.info(f"이 수요는 서울 25개 구 평균 중 상위 {rank}번째 수준입니다." if rank<=10 else "평균 이하 수요 구간입니다.")
 
+GEO_URL = "https://raw.githubusercontent.com/raqoon886/Local_HangJeongDong/master/hangjeongdong_%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C.geojson"
+
+@st.cache_data(ttl=86400)
+def load_geo():
+    geo = requests.get(GEO_URL, timeout=15).json()
+    for i, f in enumerate(geo['features']):
+        f['id'] = i
+        nm = f['properties'].get('adm_nm', '')
+        parts = nm.split()
+        f['properties']['gu'] = parts[1] if len(parts) >= 2 else ''
+    return geo
+
 st.divider()
-st.subheader("📊 구별 평균 일 충전량")
-st.bar_chart(gs.set_index("gu")["충전량"])
+st.subheader("🗺️ 서울시 구별 충전 수요 지도")
+try:
+    geo = load_geo()
+    gu_map = gs.set_index("gu")["충전량"].to_dict()
+    feat_df = pd.DataFrame([{
+        "id": f["id"],
+        "자치구": f["properties"]["gu"],
+        "일 평균 충전량(kWh)": gu_map.get(f["properties"]["gu"], 0)
+    } for f in geo["features"]])
+    fig = px.choropleth_mapbox(
+        feat_df, geojson=geo, locations="id",
+        color="일 평균 충전량(kWh)",
+        color_continuous_scale="Blues",
+        mapbox_style="carto-positron",
+        zoom=10, center={"lat": 37.5665, "lon": 126.9780},
+        opacity=0.7,
+        hover_data={"자치구": True, "일 평균 충전량(kWh)": True, "id": False},
+    )
+    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, height=500)
+    st.plotly_chart(fig, use_container_width=True)
+except Exception as e:
+    st.warning(f"지도 로드 실패 — 바 차트로 대체합니다. ({e})")
+    st.bar_chart(gs.set_index("gu")["충전량"])
+
 st.subheader("🔥 충전 수요 핫스팟 TOP10 (인프라 투자 우선 후보 지역)")
 st.dataframe(hs.head(10), use_container_width=True)
 st.caption("로드맵: 1주 ML(현재) → 2주 DL(LSTM 시계열) → 3주 LLM(충전 인프라 어드바이저·RAG)")

@@ -20,7 +20,7 @@ doc.add_heading('2. 개요 및 현황',1)
 doc.add_heading('2.1 추진배경 및 목적',2)
 bullets(['전기차 보급 급증 → 충전 인프라 수요 예측·관리 필요성 증대',
          '활용: ①충전 인프라 투자 효율 ②전력 부하 관리(에너지 절감) ③운영 최적화',
-         '향후 비전: 예측 수요 기반 이동형 배달충전 배치 → 자율주행 무인 충전의 두뇌(스토리)'])
+         '향후 비전: 예측 수요 기반 충전 인프라 투자 우선순위 결정 → 충전 어드바이저(LLM·RAG)로 발전'])
 doc.add_heading('2.2 과제 범위',2)
 doc.add_paragraph('AI(데이터 정제·EDA·모델) / 시각화(Streamlit) / 테스트. 제외: 자율주행 구현, CNN/이미지, 동 단위 예측.')
 doc.add_heading('2.3 추진 방법',2)
@@ -29,19 +29,19 @@ doc.add_heading('3. 연구개발 주요 결과물',1)
 doc.add_heading('① 데이터 수집',2)
 doc.add_paragraph('한국전력공사 서울 충전량, 638,702 세션, 9개 컬럼(충전량·충전구분·주소·시각 등). 출처: 공공데이터포털.')
 doc.add_heading('② 데이터 분석',2)
-doc.add_paragraph('전처리: null/음수 11,203건 제거 · 밀집구간 필터(2021-01~2022-03, 455일) · 주소→구 추출 98.5% · 누수 특성(세션수·충전시간) 제외.')
-doc.add_paragraph('상관관계 히트맵 (세션수 0.89 → 누수로 특성 제외):'); fig('06_corr.png',4.3)
+doc.add_paragraph('데이터 정제: 오류 데이터(음수·누락) 11,203건 제거 · 집중 기간 필터(2021-01~2022-03) · 주소→자치구 분류 98.5% · 충전 후에야 알 수 있는 항목(충전 횟수·소요시간) 예측에서 제외.')
+doc.add_paragraph('항목 간 관련도 분석 — 충전 후에야 알 수 있는 항목은 관련도가 높아도 학습에서 제외:'); fig('06_corr.png',4.3)
 doc.add_paragraph('충전량 분포(0~4000 확대) / 충전구분별 평균:'); fig('01_target_dist.png',4.5); fig('05_charger.png',3.3)
-doc.add_paragraph('수요 상위 구(배달충전 우선지역): 송파 > 강남 > 마포 > 서초 > 용산'); fig('04_top_gu.png',5.0)
+doc.add_paragraph('수요 상위 구(인프라 투자 우선 후보 지역): 송파 > 강남 > 마포 > 서초 > 용산'); fig('04_top_gu.png',5.0)
 doc.add_heading('③ 데이터 학습 및 모델 정의',2)
-doc.add_paragraph('타깃: 일별 충전량 · 범주형 원-핫 · XGBoost 회귀 · 검증: train/test 8:2 + 5-fold CV(shuffle), random_state=42.')
+doc.add_paragraph('예측 목표: 일별 충전량 · AI 모델: XGBoost · 검증: 학습/테스트 8:2 분할 + 5회 교차검증.')
 t=doc.add_table(rows=3,cols=5); t.style='Table Grid'
-hdr=['모델','베이스라인 R²','XGBoost R²','CV R²','RMSE(kWh)']
+hdr=['모델','기준 모델 정확도','AI 모델 정확도','교차검증 정확도','평균 오차(kWh)']
 data=[['구(거시)','0.761','0.787','0.768','216'],['충전소(미시)','0.485','0.571','0.570','52']]
 for j,h in enumerate(hdr): t.rows[0].cells[j].text=h
 for i,r in enumerate(data):
     for j,v in enumerate(r): t.rows[i+1].cells[j].text=v
-doc.add_paragraph('→ 두 모델 모두 베이스라인 초과(주 성공기준 달성).')
+doc.add_paragraph('→ 두 모델 모두 기준 모델 대비 성능 향상 확인.')
 doc.add_paragraph('예측 vs 실제(0~4000 확대) / 특성 중요도(구 모델):'); fig('07_pred_gu.png',5.4); fig('08_imp_gu.png',4.8)
 doc.add_heading('④ 예측 결과 활용 방안',2)
 doc.add_paragraph(
@@ -53,7 +53,7 @@ uhdr=['활용 분야','예측 활용 방식','기대 효과']
 udata=[
     ['충전 인프라 투자','수요 상위 구·충전소 TOP-N 파악','신규 충전기 설치 우선순위 결정 (예산 효율 향상)'],
     ['전력 부하 관리','시간대·요일별 수요 피크 예측','한전 부하 분산 계획 수립 (에너지 절감)'],
-    ['배달충전 배차(비전)','고수요 구역·시간대 사전 탐지','이동 충전 차량 출동 지역·시각 결정'],
+    ['이동형 충전 배차(비전)','고수요 구역·시간대 사전 탐지','이동 충전 차량 출동 지역·시각 결정'],
 ]
 for j,h in enumerate(uhdr): ut.rows[0].cells[j].text=h
 for i,r in enumerate(udata):
@@ -61,14 +61,14 @@ for i,r in enumerate(udata):
 doc.add_paragraph('')
 doc.add_paragraph(
     '【활용 예시】 앱에서 강남구 / 급속 / 금요일 / 6월 선택 시 예측 충전량 1,245 kWh 출력 '
-    '→ 이 구역·시간대는 수요 상위권 → 배달충전 차량 우선 배치 대상으로 판단.'
+    '→ 이 구역·시간대는 수요 상위권 → 인프라 투자 및 이동형 충전 우선 배치 대상으로 판단.'
 )
 doc.add_heading('⑤ 프로토타이핑 (화면)',2)
 doc.add_paragraph('Streamlit 서비스: 구·충전기·요일·월 입력 → 예상 일 충전량 + 구별 수요 + 충전소 핫스팟 TOP10.')
 doc.add_paragraph('[여기에 배포된 Streamlit 앱 스크린샷을 삽입하세요]')
 doc.add_heading('4. 결론 및 향후',1)
-bullets(['구 모델 R²≈0.79, 충전소 모델 R²≈0.57 — 두 모델 모두 베이스라인 초과',
-         '수요 핫스팟(송파·강남·마포…) 도출 → 배달충전 우선지역 의사결정 지원',
+bullets(['구 모델 정확도 78.7%, 충전소 모델 정확도 57.1% — 두 모델 모두 기준 모델 대비 성능 향상 확인',
+         '수요 상위 지역(송파·강남·마포…) 도출 → 인프라 투자 우선순위 의사결정 지원',
          '예측 결과 → 인프라 투자 · 부하 관리 · 이동 충전 배차의 3가지 경로로 실활용 가능',
          '향후: 2주 DL(LSTM 시계열 예측) / 3주 LLM(충전 어드바이저·RAG 챗봇)으로 확장'])
 out=ROOT/'docs'/'오영석_머신러닝프로젝트.docx'
