@@ -63,8 +63,44 @@ st.cell(8,0).merge(st.cell(13,0))   # AI 머신러닝
 st.cell(1,1).merge(st.cell(3,1))    # 전처리
 st.cell(4,1).merge(st.cell(7,1))    # EDA 분석
 st.cell(10,1).merge(st.cell(11,1))  # 분석
-doc.add_heading('2.3 추진 방법',2)
-doc.add_paragraph('DATA IMPORTING → 전처리 → 모델링(XGBoost) → 예측 → 시각화')
+doc.add_heading('2.3 과제 추진 방법',2)
+
+def bpara(text):
+    p=doc.add_paragraph(); p.add_run(text).bold=True; return p
+def cbullet(text):
+    p=doc.add_paragraph(); p.paragraph_format.left_indent=Pt(12); p.add_run('○ '+text); return p
+def sbullet(text):
+    p=doc.add_paragraph(); p.paragraph_format.left_indent=Pt(24); p.add_run('■ '+text); return p
+
+bpara('1) 구축 대상 선정 기준')
+cbullet('데이터 접근성 및 활용성')
+sbullet('공공데이터포털을 통한 한국전력공사 서울시 전기차 충전 데이터 무료 수집 가능')
+sbullet('정부 및 공공기관에서 이미 구축된 충전 이용 데이터베이스 활용 가능')
+sbullet('충전량에 영향을 미치는 자치구·충전기 유형·시간 등 다양한 독립변수 포함으로 모델학습 유용성 확보')
+cbullet('예측모델 개발 효율성')
+sbullet('충전량·충전 구분·자치구·요일·월 등 변수 구조가 단순하여 모델 학습 및 평가 과정 간소화 가능')
+sbullet('개발된 모델을 타 지역 및 전국 단위 충전 인프라 예측에 확장 적용 가능')
+cbullet('환경문제 해결 기여도 및 경제성')
+sbullet('충전 수요 예측을 통한 전력 부하 분산 및 에너지 절감 기여 (ex. 전력 피크 저감, 재생에너지 연계 등)')
+sbullet('충전 인프라 투자 우선순위 결정을 통한 설치 비용 절감 효과')
+sbullet('충전 병목 해소로 전기차 보급 확대 → 온실가스 감소 등 사회적 비용감소 효과')
+
+bpara('2) AI 예측 분석모델 적용 대상')
+at=doc.add_table(rows=2,cols=4); at.style='Table Grid'
+for j,h in enumerate(['환경관리\n기능','수집 데이터','예측모델인자(독립변수)','AI예측 분석 대상']):
+    at.rows[0].cells[j].text=h
+dr=at.rows[1]
+dr.cells[0].text='전기차\n충전'
+dr.cells[1].text=('- 한국전력공사 서울시 전기차 충전소 충전량 데이터 (638,702건)\n'
+                   '- 충전소별 일별 충전량 집계 데이터\n'
+                   '- 자치구별 일별 충전량 집계 데이터')
+dr.cells[2].text=('- 위치변수: 자치구, 충전소명\n'
+                   '- 충전기변수: 충전 구분(급속/완속), 충전기 용량(kW)\n'
+                   '- 시간변수: 요일, 월')
+dr.cells[3].text=('- 일별 충전량(kWh) 예측\n'
+                   '- 수요 상위 자치구 도출\n'
+                   '- 충전소 핫스팟 TOP10\n'
+                   '- 인프라 투자 우선순위 결정')
 doc.add_heading('3. 연구개발 주요 결과물',1)
 doc.add_heading('① 데이터 수집',2)
 doc.add_paragraph('한국전력공사 서울 충전량, 638,702 세션, 9개 컬럼(충전량·충전구분·주소·시각 등). 출처: 공공데이터포털.')
@@ -77,7 +113,7 @@ doc.add_heading('③ 데이터 학습 및 모델 정의',2)
 doc.add_paragraph('예측 목표: 일별 충전량 · AI 모델: XGBoost · 검증: 학습/테스트 8:2 분할 + 5회 교차검증.')
 t=doc.add_table(rows=3,cols=5); t.style='Table Grid'
 hdr=['모델','기준 모델 정확도','AI 모델 정확도','교차검증 정확도','평균 오차(kWh)']
-data=[['구(거시) — RandomForest','0.761','0.766','0.772','150'],['충전소(미시) — GradientBoosting','0.485','0.556','0.346','37']]
+data=[['구(거시) — RandomForest','0.761','0.769','0.775','149'],['충전소(미시) — GradientBoosting','0.485','0.556','0.349','37']]
 for j,h in enumerate(hdr): t.rows[0].cells[j].text=h
 for i,r in enumerate(data):
     for j,v in enumerate(r): t.rows[i+1].cells[j].text=v

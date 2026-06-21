@@ -1,6 +1,6 @@
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import pandas as pd, numpy as np, joblib
+import pandas as pd, numpy as np, joblib, holidays
 from pathlib import Path
 from sklearn.model_selection import train_test_split, cross_val_score, KFold
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
@@ -97,18 +97,27 @@ def run(df, cats, nums, keys, tag, title, cv_sample=5000):
     return best_name, best_r2, rmse(yte, best_pred), mae(yte, best_pred), br2
 
 # ── 학습 실행 ──────────────────────────────────────────────
-gu = pd.read_csv(DATA / "gu_day.csv",      encoding="utf-8-sig")
-st = pd.read_csv(DATA / "station_day.csv", encoding="utf-8-sig")
+kr_hol = holidays.KR()
+
+def add_features(df):
+    df = df.copy()
+    dates = pd.to_datetime(df["date"]).dt.date
+    df["is_holiday"] = dates.map(lambda d: 1 if d in kr_hol else 0)
+    df["is_weekend"]  = (df["weekday"] >= 5).astype(int)
+    return df
+
+gu = add_features(pd.read_csv(DATA / "gu_day.csv",      encoding="utf-8-sig"))
+st = add_features(pd.read_csv(DATA / "station_day.csv", encoding="utf-8-sig"))
 
 print("=== 구 단위 모델 ===")
 gu_best, gu_r2, gu_rmse, gu_mae, gu_br2 = run(
-    gu, ["gu", "충전구분"], ["weekday", "month"],
+    gu, ["gu", "충전구분"], ["weekday", "month", "is_holiday", "is_weekend"],
     ["gu", "충전구분", "weekday"], "gu", "구 모델"
 )
 
 print("\n=== 충전소 단위 모델 ===")
 st_best, st_r2, st_rmse, st_mae, st_br2 = run(
-    st, ["충전소명", "gu", "충전구분"], ["충전기용량", "weekday", "month"],
+    st, ["충전소명", "gu", "충전구분"], ["충전기용량", "weekday", "month", "is_holiday", "is_weekend"],
     ["충전소명", "weekday"], "station", "충전소 모델", cv_sample=3000
 )
 
