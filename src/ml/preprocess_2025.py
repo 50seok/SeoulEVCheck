@@ -15,7 +15,7 @@ OUT    = ROOT / "data"
 COL = {
     "시도": 0, "시군구": 1, "충전소명": 5,
     "충전기용량": 10, "충전구분": 12,
-    "충전량": 13, "날짜": 16,
+    "충전량": 13, "날짜": 16, "충전시작시각": 17,
 }
 
 kr_hol = holidays.KR()
@@ -36,27 +36,30 @@ def clean(df):
     df = df.copy()
     df["충전량"]    = pd.to_numeric(df["충전량"],    errors="coerce")
     df["충전기용량"] = pd.to_numeric(df["충전기용량"], errors="coerce")
-    df["date"]     = pd.to_datetime(df["날짜"],      errors="coerce").dt.date
+    df["date"]     = pd.to_datetime(df["날짜"].str.replace("-",""), format="%Y%m%d", errors="coerce").dt.date
     df = df.dropna(subset=["충전량", "date", "시군구"])
     df = df[df["충전량"] > 0]
     df["gu"]       = df["시군구"].str.strip()
     df["충전구분"]  = df["충전구분"].str.strip().str[:2]
-    df["weekday"]   = pd.to_datetime(df["date"]).dt.weekday
-    df["month"]     = pd.to_datetime(df["date"]).dt.month
-    dates           = pd.to_datetime(df["date"]).dt.date
+    dt              = pd.to_datetime(df["date"])
+    df["year"]      = dt.dt.year
+    df["weekday"]   = dt.dt.weekday
+    df["month"]     = dt.dt.month
+    dates           = dt.dt.date
     df["is_holiday"]= dates.map(lambda d: 1 if d in kr_hol else 0)
     df["is_weekend"] = (df["weekday"] >= 5).astype(int)
+    df["hour"]      = pd.to_datetime(df["충전시작시각"], errors="coerce").dt.hour
     return df
 
 def make_gu_day(df):
-    return (df.groupby(["gu","충전구분","date","weekday","month","is_holiday","is_weekend"])
-              .agg(충전량=("충전량","sum"), sessions=("충전량","count"))
+    return (df.groupby(["gu","충전구분","date","year","weekday","month","is_holiday","is_weekend"])
+              .agg(충전량=("충전량","sum"), sessions=("충전량","count"), avg_hour=("hour","mean"))
               .reset_index())
 
 def make_station_day(df):
     return (df.groupby(["충전소명","gu","충전구분","충전기용량",
-                        "date","weekday","month","is_holiday","is_weekend"])
-              .agg(충전량=("충전량","sum"), sessions=("충전량","count"))
+                        "date","year","weekday","month","is_holiday","is_weekend"])
+              .agg(충전량=("충전량","sum"), sessions=("충전량","count"), avg_hour=("hour","mean"))
               .reset_index())
 
 if __name__ == "__main__":
