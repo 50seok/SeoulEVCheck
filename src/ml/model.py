@@ -106,8 +106,8 @@ def add_features(df):
     df["is_weekend"]  = (df["weekday"] >= 5).astype(int)
     return df
 
-gu = add_features(pd.read_csv(DATA / "gu_day.csv",      encoding="utf-8-sig"))
-st = add_features(pd.read_csv(DATA / "station_day.csv", encoding="utf-8-sig"))
+gu = pd.read_csv(DATA / "gu_day_2025.csv",      encoding="utf-8-sig")
+st = pd.read_csv(DATA / "station_day_2025.csv", encoding="utf-8-sig")
 
 print("=== 구 단위 모델 ===")
 gu_best, gu_r2, gu_rmse, gu_mae, gu_br2 = run(

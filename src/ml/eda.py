@@ -4,7 +4,7 @@ from pathlib import Path
 plt.rcParams["font.family"] = "Malgun Gothic"; plt.rcParams["axes.unicode_minus"] = False
 ROOT = Path("C:/teamwork/SeoulEVCheck"); DATA = ROOT/"data"
 FIG = ROOT/"reports"/"figures"; FIG.mkdir(parents=True, exist_ok=True)
-gu = pd.read_csv(DATA/"gu_day.csv", encoding="utf-8-sig")
+gu = pd.read_csv(DATA/"gu_day_2025.csv", encoding="utf-8-sig")
 
 def save(name, title):
     plt.title(title); plt.tight_layout(); plt.savefig(FIG/name, dpi=110); plt.close()
