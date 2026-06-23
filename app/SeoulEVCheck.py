@@ -98,7 +98,7 @@ with tab2:
             ("04_top_gu.png",      "자치구역별 총 충전량 TOP10"),
         ]:
             if (FIG/fname).exists():
-                st.image(str(FIG/fname), caption=caption, use_container_width=True)
+                st.image(str(FIG/fname), caption=caption)
     with col2:
         for fname, caption in [
             ("02_weekday.png", "요일별 평균 충전량"),
@@ -106,7 +106,7 @@ with tab2:
             ("06_corr.png",    "항목 간 상관관계"),
         ]:
             if (FIG/fname).exists():
-                st.image(str(FIG/fname), caption=caption, use_container_width=True)
+                st.image(str(FIG/fname), caption=caption)
 
 # ── 탭3: 모델 평가 ────────────────────────────────────────
 with tab3:
@@ -114,24 +114,20 @@ with tab3:
 
     if (FIG/"10_model_compare.png").exists():
         st.image(str(FIG/"10_model_compare.png"),
-                 caption="5개 모델 비교 결과 (최적: RandomForest R²=0.862)",
-                 use_container_width=True)
+                 caption="5개 모델 비교 결과 (최적: RandomForest R²=0.862)")
 
     st.divider()
     col1, col2 = st.columns(2)
     with col1:
         if (FIG/"07_pred_gu.png").exists():
             st.image(str(FIG/"07_pred_gu.png"),
-                     caption="AI 예측값 vs 실제 충전량 산점도",
-                     use_container_width=True)
+                     caption="AI 예측값 vs 실제 충전량 산점도")
     with col2:
         if (FIG/"08_imp_gu.png").exists():
             st.image(str(FIG/"08_imp_gu.png"),
-                     caption="충전량 예측 특성 중요도 TOP12",
-                     use_container_width=True)
+                     caption="충전량 예측 특성 중요도 TOP12")
 
     st.divider()
     if (FIG/"11_pred_vs_actual_gu.png").exists():
         st.image(str(FIG/"11_pred_vs_actual_gu.png"),
-                 caption="자치구역별 실제 vs 예측 충전량 비교",
-                 use_container_width=True)
+                 caption="자치구역별 실제 vs 예측 충전량 비교")
