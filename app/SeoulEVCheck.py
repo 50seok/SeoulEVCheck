@@ -20,7 +20,7 @@ gm, gs, hs = load()
 GU = sorted(c[3:] for c in fnames(gm) if c.startswith("gu_"))
 WD = {"월":0,"화":1,"수":2,"목":3,"금":4,"토":5,"일":6}
 
-st.set_page_config(page_title="SeoulEVCheck", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="SeoulEVCheck", page_icon="⚡")
 st.title("⚡ SeoulEVCheck")
 st.caption("서울시 자치구역별 전기차 충전 수요 예측 — 급속·완속 병목 지역과 인프라 사각지대를 식별하여 투자 우선순위를 지원합니다.")
 
