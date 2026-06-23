@@ -50,8 +50,8 @@ with tab1:
             return float(np.expm1(gm.predict(xi)[0]))
 
         pred = predict_gu(gu, ch, yr, mo)
-        all_preds = sorted([predict_gu(g, ch, yr, mo) for g in GU], reverse=True)
-        rank = all_preds.index(pred) + 1
+        all_preds = [predict_gu(g, ch, yr, mo) for g in GU]
+        rank = sum(1 for p in all_preds if p > pred) + 1
 
         st.metric(f"{gu} · {ch} · {yr}년 {mo}월 예상 월간 총 충전량", f"{pred:,.0f} kWh")
         st.info(f"이 수요는 서울 25개 자치구역 중 {rank}위 수준입니다. ({ch} 기준, {yr}년 {mo}월)")
