@@ -63,9 +63,6 @@
 ### 모델 비교
 ![모델 비교](reports/figures/10_model_compare.png)
 
-### 예측 vs 실제 (자치구 모델)
-![예측 vs 실제](reports/figures/11_pred_vs_actual_gu.png)
-
 ### 특성 중요도 (자치구 모델)
 ![특성 중요도](reports/figures/08_imp_gu.png)
 
