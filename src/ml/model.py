@@ -81,7 +81,7 @@ def run(df, cats, nums, keys, tag, title, cv_sample=5000, log_target=False):
     plt.xlim(0, lim); plt.ylim(0, lim)
     plt.xlabel("실제 충전량(kWh)")
     plt.ylabel("예측 충전량(kWh)")
-    plt.title(f"AI 예측값 vs 실제 충전량 (R²={best_r2:.2f})")
+    plt.title(f"자치구역 AI 예측값 vs 실제 충전량 (R²={best_r2:.2f})")
     plt.tight_layout()
     plt.savefig(FIG / f"07_pred_{tag}.png", dpi=110)
     plt.close()
@@ -119,14 +119,14 @@ gu["month_seq"] = (gu["year"] - 2025) * 12 + gu["month"]
 
 print(f"월별 집계: {len(gu):,}행 (일별 {len(gu_day):,}행 → 집계)")
 
-print("\n=== 구 단위 모델 (월별 집계 + log 타깃) ===")
+print("\n=== 자치구역 단위 모델 (월별 집계 + log 타깃) ===")
 gu_best, gu_r2, gu_rmse, gu_mae, gu_br2 = run(
     gu, ["gu", "충전구분"],
     ["month_seq", "year", "month", "avg_hour"],
-    ["gu", "충전구분", "month"], "gu", "구 모델",
+    ["gu", "충전구분", "month"], "gu", "자치구역 모델",
     log_target=True
 )
 
 print("\n=== 최종 결과 요약 ===")
-print(f"구 모델  최적={gu_best:<22} R²={gu_r2:.3f}  RMSE={gu_rmse:.0f}  MAE={gu_mae:.0f}")
+print(f"자치구역 모델  최적={gu_best:<22} R²={gu_r2:.3f}  RMSE={gu_rmse:.0f}  MAE={gu_mae:.0f}")
 print("saved:", [p.name for p in MODELS.glob("*.pkl")])
