@@ -45,7 +45,8 @@ print("\n[수요 TOP5 구]\n", topgu.head(5).round(0).to_string())
 print("\n[타깃 상관]\n", num.corr()["충전량(kWh)"].round(3).to_string())
 try:
     from ydata_profiling import ProfileReport
-    ProfileReport(gu, minimal=True, title="SeoulEVCheck gu_day EDA").to_file(ROOT/"reports"/"gu_day_profile.html")
+    ProfileReport(gu, minimal=True, title="SeoulEVCheck gu_day EDA",
+                  samples={"head": 5, "tail": 5}).to_file(ROOT/"reports"/"gu_day_profile.html")
     print("\nydata-profiling: OK -> reports/gu_day_profile.html")
 except Exception as e:
     print("\nydata-profiling skip:", str(e)[:70])
