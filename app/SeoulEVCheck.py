@@ -85,7 +85,9 @@ with tab1:
         st.bar_chart(gs.set_index("gu")["충전량"])
 
     st.subheader("🔥 충전 수요 핫스팟 TOP10")
-    st.dataframe(hs.head(10), use_container_width=True)
+    top10 = hs.head(10).copy()
+    top10.index = range(1, 11)
+    st.dataframe(top10, use_container_width=True)
 
 # ── 탭2: 데이터 분석 ──────────────────────────────────────
 with tab2:
