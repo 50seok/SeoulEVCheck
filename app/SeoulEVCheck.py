@@ -28,29 +28,33 @@ tab1, tab2, tab3 = st.tabs(["⚡ 충전 수요 예측", "📊 데이터 분석",
 # ── 탭1: 예측 ─────────────────────────────────────────────
 with tab1:
     st.subheader("충전 수요 예측")
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4 = st.columns(4)
     gu = c1.selectbox("자치구역", GU, index=GU.index("강남구") if "강남구" in GU else 0)
     ch = c2.selectbox("충전기", ["급속","완속"])
-    mo = c3.selectbox("월", list(range(1,13)), index=5)
+    yr = c3.selectbox("년도", [2025, 2026, 2027], index=1)
+    mo = c4.selectbox("월", list(range(1,13)), index=5)
+
+    if yr == 2027:
+        st.caption("⚠️ 2027년 예측은 학습 데이터 범위를 벗어나 정확도가 낮을 수 있습니다.")
 
     if st.button("🔮 예측하기", type="primary"):
         cols = fnames(gm)
 
-        def predict_gu(g, charge, month):
+        def predict_gu(g, charge, year, month):
             xi = pd.DataFrame(np.zeros((1, len(cols))), columns=cols)
             if f"gu_{g}" in cols:           xi.loc[0, f"gu_{g}"] = 1.0
             if f"충전구분_{charge}" in cols: xi.loc[0, f"충전구분_{charge}"] = 1.0
+            xi.loc[0, "year"]      = year
             xi.loc[0, "month"]     = month
-            xi.loc[0, "month_seq"] = month
-            xi.loc[0, "year"]      = 2025
+            xi.loc[0, "month_seq"] = (year - 2025) * 12 + month
             return float(np.expm1(gm.predict(xi)[0]))
 
-        pred = predict_gu(gu, ch, mo)
-        all_preds = sorted([predict_gu(g, ch, mo) for g in GU], reverse=True)
+        pred = predict_gu(gu, ch, yr, mo)
+        all_preds = sorted([predict_gu(g, ch, yr, mo) for g in GU], reverse=True)
         rank = all_preds.index(pred) + 1
 
-        st.metric(f"{gu} · {ch} · {mo}월 예상 월간 총 충전량", f"{pred:,.0f} kWh")
-        st.info(f"이 수요는 서울 25개 자치구역 중 {rank}위 수준입니다. ({ch} 기준, {mo}월)")
+        st.metric(f"{gu} · {ch} · {yr}년 {mo}월 예상 월간 총 충전량", f"{pred:,.0f} kWh")
+        st.info(f"이 수요는 서울 25개 자치구역 중 {rank}위 수준입니다. ({ch} 기준, {yr}년 {mo}월)")
 
     st.divider()
     st.subheader("🗺️ 서울시 자치구역별 충전 수요 지도")
