@@ -5,6 +5,7 @@ plt.rcParams["font.family"] = "Malgun Gothic"; plt.rcParams["axes.unicode_minus"
 ROOT = Path("C:/teamwork/SeoulEVCheck"); DATA = ROOT/"data"
 FIG = ROOT/"reports"/"figures"; FIG.mkdir(parents=True, exist_ok=True)
 gu = pd.read_csv(DATA/"gu_day_2025.csv", encoding="utf-8-sig")
+gu = gu[gu["충전량"] <= 10000]  # 서울숲M타워 등 이상치 제거
 
 def save(name, title):
     plt.title(title); plt.tight_layout(); plt.savefig(FIG/name, dpi=110); plt.close()
