@@ -18,7 +18,6 @@ def fnames(m):
 
 gm, gs, hs = load()
 GU = sorted(c[3:] for c in fnames(gm) if c.startswith("gu_"))
-WD = {"월":0,"화":1,"수":2,"목":3,"금":4,"토":5,"일":6}
 
 st.set_page_config(page_title="SeoulEVCheck", page_icon="⚡")
 st.title("⚡ SeoulEVCheck")
@@ -29,23 +28,29 @@ tab1, tab2, tab3 = st.tabs(["⚡ 충전 수요 예측", "📊 데이터 분석",
 # ── 탭1: 예측 ─────────────────────────────────────────────
 with tab1:
     st.subheader("충전 수요 예측")
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3 = st.columns(3)
     gu = c1.selectbox("자치구역", GU, index=GU.index("강남구") if "강남구" in GU else 0)
     ch = c2.selectbox("충전기", ["급속","완속"])
-    wd = c3.selectbox("요일", list(WD))
-    mo = c4.selectbox("월", list(range(1,13)), index=5)
+    mo = c3.selectbox("월", list(range(1,13)), index=5)
 
     if st.button("🔮 예측하기", type="primary"):
         cols = fnames(gm)
-        x = pd.DataFrame(np.zeros((1, len(cols))), columns=cols)
-        if f"gu_{gu}" in cols: x.loc[0, f"gu_{gu}"] = 1.0
-        if f"충전구분_{ch}" in cols: x.loc[0, f"충전구분_{ch}"] = 1.0
-        x.loc[0, "month"] = mo
-        pred = float(np.expm1(gm.predict(x)[0]))
-        st.metric(f"{gu} · {ch} · {wd}요일 예상 월 충전량", f"{pred:,.0f} kWh")
-        rank = int((gs["충전량"] >= pred).sum())
-        st.info(f"이 수요는 서울 25개 자치구역 중 상위 {rank}번째 수준입니다."
-                if rank <= 10 else "평균 이하 수요 구간입니다.")
+
+        def predict_gu(g, charge, month):
+            xi = pd.DataFrame(np.zeros((1, len(cols))), columns=cols)
+            if f"gu_{g}" in cols:           xi.loc[0, f"gu_{g}"] = 1.0
+            if f"충전구분_{charge}" in cols: xi.loc[0, f"충전구분_{charge}"] = 1.0
+            xi.loc[0, "month"]     = month
+            xi.loc[0, "month_seq"] = month
+            xi.loc[0, "year"]      = 2025
+            return float(np.expm1(gm.predict(xi)[0]))
+
+        pred = predict_gu(gu, ch, mo)
+        all_preds = sorted([predict_gu(g, ch, mo) for g in GU], reverse=True)
+        rank = all_preds.index(pred) + 1
+
+        st.metric(f"{gu} · {ch} · {mo}월 예상 월간 총 충전량", f"{pred:,.0f} kWh")
+        st.info(f"이 수요는 서울 25개 자치구역 중 {rank}위 수준입니다. ({ch} 기준, {mo}월)")
 
     st.divider()
     st.subheader("🗺️ 서울시 자치구역별 충전 수요 지도")
