@@ -111,6 +111,11 @@ def add_features(df):
 
 gu_day = pd.read_csv(DATA / "gu_day_2025.csv", encoding="utf-8-sig")
 
+# 이상치 제거: 단일 충전소 오류값(서울숲M타워 등)이 구 집계에 유입된 건 필터
+_before = len(gu_day)
+gu_day = gu_day[gu_day["충전량"] <= 10000]
+print(f"이상치 제거: {_before - len(gu_day)}건 제거 (충전량 > 10,000 kWh)")
+
 # 월별 집계 — 일별 변동 제거, 트렌드·계절성 반영
 gu = (gu_day.groupby(["gu", "충전구분", "year", "month"])
       .agg(충전량=("충전량", "sum"), sessions=("sessions", "sum"), avg_hour=("avg_hour", "mean"))
