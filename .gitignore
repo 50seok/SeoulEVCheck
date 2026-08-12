@@ -13,3 +13,11 @@ venv/
 # 보고서 자료(제출용) - 공개 제외
 docs/*.docx
 docs/week1_report_content.md
+
+# 프로파일링 HTML(각 1MB+, gen_eda_profile.py·eda.py 로 재생성 가능)
+reports/*.html
+
+# 제출 산출물(공개 제외) — docs/제출/ 에 로컬 1벌만 보관
+docs/*.hwp
+docs/*.zip
+docs/제출/

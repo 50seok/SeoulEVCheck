@@ -2,7 +2,7 @@ import pandas as pd
 from ydata_profiling import ProfileReport
 from pathlib import Path
 
-ROOT = Path("C:/teamwork/SeoulEVCheck")
+ROOT = Path(__file__).resolve().parents[2]
 OUT  = ROOT / "reports"
 
 gu = pd.read_csv(ROOT / "data" / "gu_day.csv", encoding="utf-8-sig")

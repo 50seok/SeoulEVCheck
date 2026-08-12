@@ -2,10 +2,16 @@
 21~22년 모델 예측 고수요 자치구 vs 25년 신규 충전소 설치 검증
 "모델이 인프라 필요하다고 예측한 곳에 실제로 설치되었는가?"
 """
+import os
 import pandas as pd
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+# 원본 데이터는 레포 밖(용량) — 다른 PC에서는 EV_RAW 환경변수로 지정
+RAW  = Path(os.environ.get("EV_RAW", r"C:\teamwork\충전소충전량"))
 
 # ── 1. 21~22 모델 예측: 구별 수요 순위 ──
-gs = pd.read_csv("C:/teamwork/SeoulEVCheck/app/gu_summary.csv", encoding="utf-8-sig")
+gs = pd.read_csv(ROOT/"app"/"gu_summary.csv", encoding="utf-8-sig")
 gs.columns = ["gu", "충전량"]
 gs = gs.sort_values("충전량", ascending=False).reset_index(drop=True)
 gs["rank"] = gs.index + 1
@@ -14,7 +20,7 @@ print("=== 21~22 예측 수요 상위 10개 자치구 ===")
 print(gs.head(10)[["rank","gu","충전량"]].to_string(index=False))
 
 # ── 2. 충전소 정보 CSV (col1=충전소명, col8=주소) ──
-info = pd.read_csv("C:/teamwork/충전소충전량/서울시 소유 전기차 충전소 정보.csv",
+info = pd.read_csv(RAW/"서울시 소유 전기차 충전소 정보.csv",
                    encoding="cp949", header=0)
 # 컬럼 인덱스로 직접 접근 (이름 인코딩 무관)
 info_nm  = info.iloc[:, 1].astype(str).str.strip()   # 충전소명
@@ -28,7 +34,7 @@ print("자치구 샘플:", stations_info["자치구"].dropna().unique()[:5].toli
 
 # ── 3. 25년 충전소 목록 ──
 df25 = pd.read_excel(
-    "C:/teamwork/충전소충전량/서울시 소유 전기차 충전소의 충전량(12월말까지).xlsx",
+    RAW/"서울시 소유 전기차 충전소의 충전량(12월말까지).xlsx",
     header=3
 )
 df25.columns = ["날짜", "충전소명", "충전구분", "충전량"]

@@ -2,14 +2,17 @@
 25년 1~12월 + 26년 1~3월 KEPCO 전기차 충전량 데이터 전처리
 → data/gu_day_2025.csv, data/station_day_2025.csv
 """
+import os
 import pandas as pd
 import numpy as np
 import holidays
 from pathlib import Path
 import glob
 
-ROOT   = Path("C:/teamwork/SeoulEVCheck")
-SRC    = Path("C:/teamwork/충전소충전량/충전소최신")
+ROOT   = Path(__file__).resolve().parents[2]
+# 원본 데이터는 레포 밖(용량) — 다른 PC에서는 EV_RAW 환경변수로 지정
+RAW    = Path(os.environ.get("EV_RAW", r"C:\teamwork\충전소충전량"))
+SRC    = RAW / "충전소최신"
 OUT    = ROOT / "data"
 
 COL = {

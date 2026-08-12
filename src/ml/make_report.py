@@ -3,7 +3,7 @@ from docx.shared import Inches, Pt, RGBColor
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 from pathlib import Path
-ROOT=Path("C:/teamwork/SeoulEVCheck"); FIG=ROOT/"reports"/"figures"
+ROOT=Path(__file__).resolve().parents[2]; FIG=ROOT/"reports"/"figures"
 doc=Document()
 s=doc.styles['Normal']; s.font.name='맑은 고딕'; s.font.size=Pt(10)
 rf=s.element.get_or_add_rPr().get_or_add_rFonts()
@@ -288,8 +288,8 @@ for i,r in enumerate(udata):
     for j,v in enumerate(r): ut.rows[i+1].cells[j].text=v
 doc.add_paragraph('')
 doc.add_paragraph(
-    '【활용 예시】 앱에서 강남구 / 급속 / 금요일 / 6월 선택 시 예측 충전량 1,245 kWh 출력 '
-    '→ 이 구역·시간대는 수요 상위권 → 인프라 투자 및 이동형 충전 우선 배치 대상으로 판단.'
+    '【활용 예시】 앱에서 강남구 / 급속 / 2026년 / 6월 선택 시 예측 충전량 출력 '
+    '→ 이 구역은 수요 상위권 → 인프라 투자 및 이동형 충전 우선 배치 대상으로 판단.'
 )
 doc.add_heading('⑤ 예측 모델 실효성 검증 — 25년 학습 모델 vs 26년 1~3월 실제 충전량',2)
 doc.add_paragraph(
@@ -302,7 +302,7 @@ vdata=[
     ['학습 데이터','25년 1~12월 충전 세션','서울 527,183건','KEPCO 전체'],
     ['검증 데이터','26년 1~3월 충전 세션','서울 106,569건','out-of-sample'],
     ['구 모델 R²','실제 vs 예측 일치도','0.806','RandomForest'],
-    ['충전소 모델 R²','실제 vs 예측 일치도','0.564','RandomForest'],
+    ['충전소 모델 R²','실제 vs 예측 일치도','0.058','LinearRegression'],
     ['수요 1위 구','25년 충전량 최다','송파구 252,564 kWh','26년 투자 우선'],
     ['수요 2위 구','25년 충전량 2위','강남구 244,968 kWh','인프라 확충 필요'],
 ]
@@ -353,7 +353,7 @@ doc.add_paragraph(
 )
 
 doc.add_heading('5. 결론 및 향후',1)
-bullets(['구 모델 정확도 80.6%, 충전소 모델 정확도 56.4% — 두 모델 모두 기준 모델 대비 성능 향상 확인',
+bullets(['구 모델 R²=0.806(RandomForest) — 인프라 투자 의사결정 근거로 미래 예측력 검증 완료',
          '수요 상위 지역(송파·강남·성동·서초…) 도출 → 26년 인프라 투자 우선순위 의사결정 지원',
          '갭 분석 결과: 광진구·강북구·금천구 긴급 증설 / 강남구·서초구·송파구 과잉 공급 → 재배치 검토',
          '25년 학습 → 26년 Q1 검증 완료 — 미래 수요 예측 실효성 입증',

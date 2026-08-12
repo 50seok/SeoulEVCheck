@@ -2,7 +2,7 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt, seaborn as sns, pandas as pd
 from pathlib import Path
 plt.rcParams["font.family"] = "Malgun Gothic"; plt.rcParams["axes.unicode_minus"] = False
-ROOT = Path("C:/teamwork/SeoulEVCheck"); DATA = ROOT/"data"
+ROOT = Path(__file__).resolve().parents[2]; DATA = ROOT/"data"
 FIG = ROOT/"reports"/"figures"; FIG.mkdir(parents=True, exist_ok=True)
 gu = pd.read_csv(DATA/"gu_day_2025.csv", encoding="utf-8-sig")
 gu = gu[gu["충전량"] <= 10000]  # 서울숲M타워 등 이상치 제거

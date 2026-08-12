@@ -11,6 +11,10 @@
 import pandas as pd, numpy as np
 import matplotlib.pyplot as plt, matplotlib.patches as mpatches
 import warnings; warnings.filterwarnings('ignore')
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+NB   = ROOT / 'notebooks'
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_squared_error
@@ -50,7 +54,7 @@ tbl[(5, 0)].set_text_props(fontweight='bold')
 ax.set_title('데이터 구성 및 변수 설명 (총 638,702 세션 · 9개 컬럼)',
              fontsize=12, fontweight='bold', pad=8)
 plt.tight_layout()
-plt.savefig('asset_columns.png', dpi=150, bbox_inches='tight')
+plt.savefig(NB/'asset_columns.png', dpi=150, bbox_inches='tight')
 plt.close()
 print('① 컬럼 설명 표 저장 완료')
 
@@ -78,7 +82,7 @@ def save_code_img(code_lines, title, filename):
                 fontsize=9.5, color=color,
                 fontfamily='Courier New', va='center')
     plt.tight_layout(pad=0.3)
-    plt.savefig(filename, dpi=150, bbox_inches='tight', facecolor='#1e1e1e')
+    plt.savefig(NB/filename, dpi=150, bbox_inches='tight', facecolor='#1e1e1e')
     plt.close()
 
 # ② 전처리 코드 스니펫
@@ -212,7 +216,7 @@ for i, lbl in enumerate(sub_labels):
 ax.set_title('AI 분석모델 구축 프로세스 — SeoulEVCheck',
              fontsize=13, fontweight='bold', pad=4)
 plt.tight_layout()
-plt.savefig('asset_diagram.png', dpi=150, bbox_inches='tight')
+plt.savefig(NB/'asset_diagram.png', dpi=150, bbox_inches='tight')
 plt.close()
 print('⑤ DATA IMPORTING 다이어그램 저장 완료')
 
@@ -227,7 +231,7 @@ def extract_gu(a):
         if t.endswith('구'): return t
     return None
 
-df = pd.read_excel('../data/한국전력공사_서울시 전기차 충전소 충전량_20220331.xlsx')
+df = pd.read_excel(ROOT/'data'/'한국전력공사_서울시 전기차 충전소 충전량_20220331.xlsx')
 df['start'] = pd.to_datetime(df['충전시작시각'], errors='coerce')
 df['gu']    = df['주소'].map(extract_gu)
 df['충전량'] = pd.to_numeric(df['충전량'], errors='coerce')
@@ -274,7 +278,7 @@ ax.text(0.05, 0.93, f'정확도(R²) = {r2:.1%}\n평균 오차 = {rmse:.0f} kWh'
         bbox=dict(boxstyle='round', facecolor='#fff3cd', alpha=0.8))
 ax.spines[['top', 'right']].set_visible(False)
 plt.tight_layout()
-plt.savefig('asset_actual_vs_pred.png', dpi=150, bbox_inches='tight')
+plt.savefig(NB/'asset_actual_vs_pred.png', dpi=150, bbox_inches='tight')
 plt.close()
 print('⑥ Actual vs Predicted 산점도 저장 완료')
 
@@ -291,7 +295,7 @@ for i, v in enumerate(top.values):
     ax.text(v + 0.0005, i, f'{v:.3f}', va='center', fontsize=9)
 ax.spines[['top', 'right']].set_visible(False)
 plt.tight_layout()
-plt.savefig('asset_feature_importance.png', dpi=150, bbox_inches='tight')
+plt.savefig(NB/'asset_feature_importance.png', dpi=150, bbox_inches='tight')
 plt.close()
 print('⑦ Feature Importance 차트 저장 완료')
 

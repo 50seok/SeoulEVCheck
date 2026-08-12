@@ -11,8 +11,9 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 plt.rcParams["font.family"] = "Malgun Gothic"
 plt.rcParams["axes.unicode_minus"] = False
 
-ROOT   = Path("C:/teamwork/SeoulEVCheck")
+ROOT   = Path(__file__).resolve().parents[2]
 DATA   = ROOT / "data"
+APP    = ROOT / "app"
 MODELS = ROOT / "models"
 FIG    = ROOT / "reports" / "figures"
 MODELS.mkdir(exist_ok=True)
@@ -56,6 +57,7 @@ def run(df, cats, nums, keys, tag, title, cv_sample=5000, log_target=False):
     print("-" * 62)
 
     best_r2, best_m, best_name, best_pred_raw = -999, None, "", None
+    rows = []
     for name, m in CANDIDATES:
         m.fit(Xtr, ytr)
         pred = m.predict(Xte)
@@ -65,8 +67,20 @@ def run(df, cats, nums, keys, tag, title, cv_sample=5000, log_target=False):
         ma = mae(yte_raw, pred_raw)
         cv = cross_val_score(m, Xcv, ycv, cv=kf, scoring="r2")
         print(f"{name:<22} {r2:>7.3f} {rm:>8.0f} {ma:>8.0f}  {cv.mean():>6.3f}±{cv.std():.3f}")
+        rows.append({"모델": name, "R²": round(r2, 3), "RMSE(kWh)": round(rm),
+                     "MAE(kWh)": round(ma), "CV R²(3폴드)": f"{cv.mean():.3f}±{cv.std():.3f}"})
         if r2 > best_r2:
             best_r2, best_m, best_name, best_pred_raw = r2, m, name, pred_raw
+
+    # 앱이 읽을 비교표 — 재학습할 때마다 갱신되므로 수치가 낡을 일이 없음
+    pd.DataFrame(rows).to_csv(APP / f"model_compare_{tag}.csv", index=False, encoding="utf-8-sig")
+
+    # 구별 실제 vs 예측 (테스트셋) — 위와 같은 이유로 이미지 대신 CSV
+    if keys and keys[0] == "gu":
+        pva = (pd.DataFrame({"gu": dte["gu"].values, "실제": yte_raw, "예측": best_pred_raw})
+                 .groupby("gu", as_index=False).sum()
+                 .sort_values("실제", ascending=False))
+        pva.to_csv(APP / f"pred_vs_actual_{tag}.csv", index=False, encoding="utf-8-sig")
 
     print(f"\n-> 최적 모델: {best_name}  R²={best_r2:.3f}")
     joblib.dump(best_m, MODELS / f"model_{tag}.pkl")
@@ -117,8 +131,9 @@ gu_day = gu_day[gu_day["충전량"] <= 10000]
 print(f"이상치 제거: {_before - len(gu_day)}건 제거 (충전량 > 10,000 kWh)")
 
 # 월별 집계 — 일별 변동 제거, 트렌드·계절성 반영
+# avg_hour(평균 충전 시작시각)는 충전 완료 후에야 알 수 있는 누수 특성이라 집계에서 제외
 gu = (gu_day.groupby(["gu", "충전구분", "year", "month"])
-      .agg(충전량=("충전량", "sum"), sessions=("sessions", "sum"), avg_hour=("avg_hour", "mean"))
+      .agg(충전량=("충전량", "sum"), sessions=("sessions", "sum"))
       .reset_index())
 gu["month_seq"] = (gu["year"] - 2025) * 12 + gu["month"]
 
@@ -127,7 +142,7 @@ print(f"월별 집계: {len(gu):,}행 (일별 {len(gu_day):,}행 → 집계)")
 print("\n=== 자치구역 단위 모델 (월별 집계 + log 타깃) ===")
 gu_best, gu_r2, gu_rmse, gu_mae, gu_br2 = run(
     gu, ["gu", "충전구분"],
-    ["month_seq", "year", "month", "avg_hour"],
+    ["month_seq", "year", "month"],
     ["gu", "충전구분", "month"], "gu", "자치구역 모델",
     log_target=True
 )
