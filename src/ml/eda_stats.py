@@ -1,6 +1,8 @@
 import pandas as pd
-gu = pd.read_csv("C:/teamwork/SeoulEVCheck/data/gu_day.csv", encoding="utf-8-sig")
-st = pd.read_csv("C:/teamwork/SeoulEVCheck/data/station_day.csv", encoding="utf-8-sig")
+from pathlib import Path
+DATA = Path(__file__).resolve().parents[2] / "data"
+gu = pd.read_csv(DATA/"gu_day.csv", encoding="utf-8-sig")
+st = pd.read_csv(DATA/"station_day.csv", encoding="utf-8-sig")
 print("=== gu_day ===")
 print("rows:", len(gu), "  cols:", len(gu.columns))
 print("columns:", list(gu.columns))
