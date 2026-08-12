@@ -123,9 +123,13 @@ with tab2:
 with tab3:
     st.subheader("모델 평가")
 
-    if (FIG/"10_model_compare.png").exists():
-        st.image(str(FIG/"10_model_compare.png"),
-                 caption="5개 모델 비교 결과 (최적: RandomForest R²=0.953)")
+    # 이미지 대신 CSV — model.py 가 재학습 때마다 갱신하므로 수치가 낡지 않음
+    cmp_path = APP/"model_compare_gu.csv"
+    if cmp_path.exists():
+        cmp = pd.read_csv(cmp_path, encoding="utf-8-sig")
+        best = cmp.loc[cmp["R²"].idxmax()]
+        st.dataframe(cmp, use_container_width=True, hide_index=True)
+        st.caption(f"5개 모델 비교 결과 (최적: {best['모델']} R²={best['R²']:.3f})")
 
     st.divider()
     col1, col2 = st.columns(2)

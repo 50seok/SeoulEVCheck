@@ -1,0 +1,6 @@
+﻿모델,R²,RMSE(kWh),MAE(kWh),CV R²(3폴드)
+LinearRegression,0.635,6235,4942,0.657±0.040
+Ridge,0.655,6066,4870,0.655±0.035
+DecisionTree,0.464,7557,5696,0.617±0.122
+RandomForest,0.953,2243,1503,0.960±0.005
+GradientBoosting,0.729,5376,4080,0.820±0.057

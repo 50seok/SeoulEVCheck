@@ -13,6 +13,7 @@ plt.rcParams["axes.unicode_minus"] = False
 
 ROOT   = Path(__file__).resolve().parents[2]
 DATA   = ROOT / "data"
+APP    = ROOT / "app"
 MODELS = ROOT / "models"
 FIG    = ROOT / "reports" / "figures"
 MODELS.mkdir(exist_ok=True)
@@ -56,6 +57,7 @@ def run(df, cats, nums, keys, tag, title, cv_sample=5000, log_target=False):
     print("-" * 62)
 
     best_r2, best_m, best_name, best_pred_raw = -999, None, "", None
+    rows = []
     for name, m in CANDIDATES:
         m.fit(Xtr, ytr)
         pred = m.predict(Xte)
@@ -65,8 +67,13 @@ def run(df, cats, nums, keys, tag, title, cv_sample=5000, log_target=False):
         ma = mae(yte_raw, pred_raw)
         cv = cross_val_score(m, Xcv, ycv, cv=kf, scoring="r2")
         print(f"{name:<22} {r2:>7.3f} {rm:>8.0f} {ma:>8.0f}  {cv.mean():>6.3f}±{cv.std():.3f}")
+        rows.append({"모델": name, "R²": round(r2, 3), "RMSE(kWh)": round(rm),
+                     "MAE(kWh)": round(ma), "CV R²(3폴드)": f"{cv.mean():.3f}±{cv.std():.3f}"})
         if r2 > best_r2:
             best_r2, best_m, best_name, best_pred_raw = r2, m, name, pred_raw
+
+    # 앱이 읽을 비교표 — 재학습할 때마다 갱신되므로 수치가 낡을 일이 없음
+    pd.DataFrame(rows).to_csv(APP / f"model_compare_{tag}.csv", index=False, encoding="utf-8-sig")
 
     print(f"\n-> 최적 모델: {best_name}  R²={best_r2:.3f}")
     joblib.dump(best_m, MODELS / f"model_{tag}.pkl")
