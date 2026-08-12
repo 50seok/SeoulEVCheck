@@ -21,3 +21,7 @@ reports/*.html
 docs/*.hwp
 docs/*.zip
 docs/제출/
+
+# 더 이상 학습하지 않는 옛 모델(충전소·XGB) 재유입 방지
+models/model_station.pkl
+models/xgb_*.pkl

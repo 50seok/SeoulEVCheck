@@ -4,8 +4,13 @@ from pathlib import Path
 plt.rcParams["font.family"] = "Malgun Gothic"; plt.rcParams["axes.unicode_minus"] = False
 ROOT = Path(__file__).resolve().parents[2]; DATA = ROOT/"data"
 FIG = ROOT/"reports"/"figures"; FIG.mkdir(parents=True, exist_ok=True)
+# 구 단위 일 충전량의 물리적 상한 — model.py·make_app_data.py 와 같은 값이어야
+# "EDA 에서 본 데이터"와 "모델이 학습한 데이터"가 어긋나지 않는다.
+# TODO(근거): 산출 근거 문장 추가 예정
+OUTLIER_MAX_KWH = 10000
+
 gu = pd.read_csv(DATA/"gu_day_2025.csv", encoding="utf-8-sig")
-gu = gu[gu["충전량"] <= 10000]  # 서울숲M타워 등 이상치 제거
+gu = gu[gu["충전량"] <= OUTLIER_MAX_KWH]  # 서울숲M타워 등 이상치 제거
 
 def save(name, title):
     plt.title(title); plt.tight_layout(); plt.savefig(FIG/name, dpi=110); plt.close()

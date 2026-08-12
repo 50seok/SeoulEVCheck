@@ -19,6 +19,19 @@ def fnames(m):
 gm, gs, hs = load()
 GU = sorted(c[3:] for c in fnames(gm) if c.startswith("gu_"))
 
+# 예측 가능 연도·month_seq 기준연도는 model.py 가 학습 후 남긴 메타에서 읽는다.
+# 하드코딩하면 학습 범위 밖 연도를 계속 노출하게 되고, 데이터가 늘어도 안 따라온다.
+_meta_path = APP / "model_meta_gu.csv"
+if _meta_path.exists():
+    _m = pd.read_csv(_meta_path, encoding="utf-8-sig").iloc[0]
+    BASE_YEAR, LAST_SEQ = int(_m["base_year"]), int(_m["last_month_seq"])
+    YEARS = list(range(int(_m["year_min"]), int(_m["year_max"]) + 1))
+else:
+    BASE_YEAR, LAST_SEQ, YEARS = 2025, 0, [2025, 2026]
+
+def month_seq(year, month):
+    return (year - BASE_YEAR) * 12 + month
+
 st.set_page_config(page_title="SeoulEVCheck", page_icon="⚡")
 st.title("⚡ SeoulEVCheck")
 st.caption("서울시 자치구역별 전기차 충전 수요 예측 — 급속·완속 병목 지역과 인프라 사각지대를 식별하여 투자 우선순위를 지원합니다.")
@@ -31,11 +44,12 @@ with tab1:
     c1, c2, c3, c4 = st.columns(4)
     gu = c1.selectbox("자치구역", GU, index=GU.index("강남구") if "강남구" in GU else 0)
     ch = c2.selectbox("충전기", ["급속","완속"])
-    yr = c3.selectbox("년도", [2025, 2026, 2027], index=1)
+    yr = c3.selectbox("년도", YEARS, index=len(YEARS) - 1)
     mo = c4.selectbox("월", list(range(1,13)), index=5)
 
-    if yr == 2027:
-        st.caption("⚠️ 2027년 예측은 학습 데이터 범위를 벗어나 정확도가 낮을 수 있습니다.")
+    if LAST_SEQ and month_seq(yr, mo) > LAST_SEQ:
+        ahead = month_seq(yr, mo) - LAST_SEQ
+        st.caption(f"⚠️ 학습 데이터 마지막 시점보다 {ahead}개월 뒤입니다. 멀수록 정확도가 낮아집니다.")
 
     if st.button("🔮 예측하기", type="primary"):
         cols = fnames(gm)
@@ -46,7 +60,7 @@ with tab1:
             if f"충전구분_{charge}" in cols: xi.loc[0, f"충전구분_{charge}"] = 1.0
             xi.loc[0, "year"]      = year
             xi.loc[0, "month"]     = month
-            xi.loc[0, "month_seq"] = (year - 2025) * 12 + month
+            xi.loc[0, "month_seq"] = month_seq(year, month)
             return float(np.expm1(gm.predict(xi)[0]))
 
         pred = predict_gu(gu, ch, yr, mo)

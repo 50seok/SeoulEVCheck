@@ -1,0 +1,2 @@
+﻿base_year,year_min,year_max,last_month_seq,best_model,r2
+2025,2025,2026,15,RandomForest,0.953

@@ -1,6 +1,6 @@
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import pandas as pd, numpy as np, joblib, holidays
+import pandas as pd, numpy as np, joblib
 from pathlib import Path
 from sklearn.model_selection import train_test_split, cross_val_score, KFold
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
@@ -17,6 +17,14 @@ APP    = ROOT / "app"
 MODELS = ROOT / "models"
 FIG    = ROOT / "reports" / "figures"
 MODELS.mkdir(exist_ok=True)
+
+# 구 단위 일 충전량의 물리적 상한 — eda.py 와 반드시 같은 값을 써야
+# "EDA 에서 본 데이터"와 "모델이 학습한 데이터"가 어긋나지 않는다.
+OUTLIER_MAX_KWH = 10000
+
+# month_seq(연속 개월 번호)의 기준 연도. 앱도 같은 값을 써야 하므로
+# model_meta_*.csv 로 내보내 앱이 하드코딩하지 않게 한다.
+MONTH_SEQ_BASE_YEAR = 2025
 
 def rmse(a, b): return float(np.sqrt(mean_squared_error(a, b)))
 def mae(a, b):  return float(mean_absolute_error(a, b))
@@ -37,7 +45,7 @@ def baseline(tr, te, keys):
     m["p"] = m["p"].fillna(tr["충전량"].mean())
     return r2_score(te["충전량"], m["p"]), rmse(te["충전량"], m["p"]), mae(te["충전량"], m["p"])
 
-def run(df, cats, nums, keys, tag, title, cv_sample=5000, log_target=False):
+def run(df, cats, nums, keys, tag, cv_sample=5000, log_target=False):
     Xc = pd.get_dummies(df[cats].astype(str), dtype=np.uint8).reset_index(drop=True)
     Xn = df[nums].reset_index(drop=True)
     X  = pd.concat([Xc, Xn], axis=1)
@@ -75,8 +83,19 @@ def run(df, cats, nums, keys, tag, title, cv_sample=5000, log_target=False):
     # 앱이 읽을 비교표 — 재학습할 때마다 갱신되므로 수치가 낡을 일이 없음
     pd.DataFrame(rows).to_csv(APP / f"model_compare_{tag}.csv", index=False, encoding="utf-8-sig")
 
+    # 앱이 예측 가능 연도를 스스로 정하도록 학습 범위를 남긴다.
+    # 하드코딩하면 데이터가 늘어도 앱이 못 따라오고, 학습 범위 밖 연도를 계속 노출하게 된다.
+    pd.DataFrame([{
+        "base_year":     MONTH_SEQ_BASE_YEAR,
+        "year_min":      int(df["year"].min()),
+        "year_max":      int(df["year"].max()),
+        "last_month_seq": int(df["month_seq"].max()) if "month_seq" in df else 0,
+        "best_model":    best_name,
+        "r2":            round(best_r2, 3),
+    }]).to_csv(APP / f"model_meta_{tag}.csv", index=False, encoding="utf-8-sig")
+
     # 구별 실제 vs 예측 (테스트셋) — 위와 같은 이유로 이미지 대신 CSV
-    if keys and keys[0] == "gu":
+    if tag == "gu":
         pva = (pd.DataFrame({"gu": dte["gu"].values, "실제": yte_raw, "예측": best_pred_raw})
                  .groupby("gu", as_index=False).sum()
                  .sort_values("실제", ascending=False))
@@ -114,28 +133,20 @@ def run(df, cats, nums, keys, tag, title, cv_sample=5000, log_target=False):
     return best_name, best_r2, rmse(yte_raw, best_pred_raw), mae(yte_raw, best_pred_raw), br2
 
 # ── 학습 실행 ──────────────────────────────────────────────
-kr_hol = holidays.KR()
-
-def add_features(df):
-    df = df.copy()
-    dates = pd.to_datetime(df["date"]).dt.date
-    df["is_holiday"] = dates.map(lambda d: 1 if d in kr_hol else 0)
-    df["is_weekend"]  = (df["weekday"] >= 5).astype(int)
-    return df
-
 gu_day = pd.read_csv(DATA / "gu_day_2025.csv", encoding="utf-8-sig")
 
 # 이상치 제거: 단일 충전소 오류값(서울숲M타워 등)이 구 집계에 유입된 건 필터
+# TODO(근거): 10,000 kWh 는 물리적 상한 근거로 정한 값 — 산출 근거 문장 추가 예정
 _before = len(gu_day)
-gu_day = gu_day[gu_day["충전량"] <= 10000]
-print(f"이상치 제거: {_before - len(gu_day)}건 제거 (충전량 > 10,000 kWh)")
+gu_day = gu_day[gu_day["충전량"] <= OUTLIER_MAX_KWH]
+print(f"이상치 제거: {_before - len(gu_day)}건 제거 (충전량 > {OUTLIER_MAX_KWH:,} kWh)")
 
 # 월별 집계 — 일별 변동 제거, 트렌드·계절성 반영
 # avg_hour(평균 충전 시작시각)는 충전 완료 후에야 알 수 있는 누수 특성이라 집계에서 제외
 gu = (gu_day.groupby(["gu", "충전구분", "year", "month"])
       .agg(충전량=("충전량", "sum"), sessions=("sessions", "sum"))
       .reset_index())
-gu["month_seq"] = (gu["year"] - 2025) * 12 + gu["month"]
+gu["month_seq"] = (gu["year"] - MONTH_SEQ_BASE_YEAR) * 12 + gu["month"]
 
 print(f"월별 집계: {len(gu):,}행 (일별 {len(gu_day):,}행 → 집계)")
 
@@ -143,7 +154,7 @@ print("\n=== 자치구역 단위 모델 (월별 집계 + log 타깃) ===")
 gu_best, gu_r2, gu_rmse, gu_mae, gu_br2 = run(
     gu, ["gu", "충전구분"],
     ["month_seq", "year", "month"],
-    ["gu", "충전구분", "month"], "gu", "자치구역 모델",
+    ["gu", "충전구분", "month"], "gu",
     log_target=True
 )
 
