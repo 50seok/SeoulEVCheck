@@ -75,6 +75,13 @@ def run(df, cats, nums, keys, tag, title, cv_sample=5000, log_target=False):
     # 앱이 읽을 비교표 — 재학습할 때마다 갱신되므로 수치가 낡을 일이 없음
     pd.DataFrame(rows).to_csv(APP / f"model_compare_{tag}.csv", index=False, encoding="utf-8-sig")
 
+    # 구별 실제 vs 예측 (테스트셋) — 위와 같은 이유로 이미지 대신 CSV
+    if keys and keys[0] == "gu":
+        pva = (pd.DataFrame({"gu": dte["gu"].values, "실제": yte_raw, "예측": best_pred_raw})
+                 .groupby("gu", as_index=False).sum()
+                 .sort_values("실제", ascending=False))
+        pva.to_csv(APP / f"pred_vs_actual_{tag}.csv", index=False, encoding="utf-8-sig")
+
     print(f"\n-> 최적 모델: {best_name}  R²={best_r2:.3f}")
     joblib.dump(best_m, MODELS / f"model_{tag}.pkl")
 

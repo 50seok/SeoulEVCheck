@@ -143,6 +143,15 @@ with tab3:
                      caption="충전량 예측 특성 중요도 TOP12")
 
     st.divider()
-    if (FIG/"11_pred_vs_actual_gu.png").exists():
-        st.image(str(FIG/"11_pred_vs_actual_gu.png"),
-                 caption="자치구역별 실제 vs 예측 충전량 비교")
+    # 이미지 대신 CSV — model.py 가 재학습 때마다 갱신
+    pva_path = APP/"pred_vs_actual_gu.csv"
+    if pva_path.exists():
+        pva = pd.read_csv(pva_path, encoding="utf-8-sig")
+        bar = px.bar(pva.melt(id_vars="gu", var_name="구분", value_name="충전량(kWh)"),
+                     x="충전량(kWh)", y="gu", color="구분", barmode="group",
+                     orientation="h", height=650,
+                     color_discrete_map={"실제": "#4C78A8", "예측": "#F58518"})
+        bar.update_layout(yaxis={"categoryorder": "total ascending", "title": ""},
+                          margin={"r":0,"t":10,"l":0,"b":0})
+        st.plotly_chart(bar, use_container_width=True)
+        st.caption("자치구역별 실제 vs 예측 충전량 (테스트셋 기준)")
