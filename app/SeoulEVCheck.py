@@ -125,7 +125,7 @@ with tab3:
 
     if (FIG/"10_model_compare.png").exists():
         st.image(str(FIG/"10_model_compare.png"),
-                 caption="5개 모델 비교 결과 (최적: RandomForest R²=0.862)")
+                 caption="5개 모델 비교 결과 (최적: RandomForest R²=0.953)")
 
     st.divider()
     col1, col2 = st.columns(2)

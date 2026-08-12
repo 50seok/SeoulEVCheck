@@ -11,7 +11,7 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 plt.rcParams["font.family"] = "Malgun Gothic"
 plt.rcParams["axes.unicode_minus"] = False
 
-ROOT   = Path("C:/teamwork/SeoulEVCheck")
+ROOT   = Path(__file__).resolve().parents[2]
 DATA   = ROOT / "data"
 MODELS = ROOT / "models"
 FIG    = ROOT / "reports" / "figures"
@@ -117,8 +117,9 @@ gu_day = gu_day[gu_day["충전량"] <= 10000]
 print(f"이상치 제거: {_before - len(gu_day)}건 제거 (충전량 > 10,000 kWh)")
 
 # 월별 집계 — 일별 변동 제거, 트렌드·계절성 반영
+# avg_hour(평균 충전 시작시각)는 충전 완료 후에야 알 수 있는 누수 특성이라 집계에서 제외
 gu = (gu_day.groupby(["gu", "충전구분", "year", "month"])
-      .agg(충전량=("충전량", "sum"), sessions=("sessions", "sum"), avg_hour=("avg_hour", "mean"))
+      .agg(충전량=("충전량", "sum"), sessions=("sessions", "sum"))
       .reset_index())
 gu["month_seq"] = (gu["year"] - 2025) * 12 + gu["month"]
 
@@ -127,7 +128,7 @@ print(f"월별 집계: {len(gu):,}행 (일별 {len(gu_day):,}행 → 집계)")
 print("\n=== 자치구역 단위 모델 (월별 집계 + log 타깃) ===")
 gu_best, gu_r2, gu_rmse, gu_mae, gu_br2 = run(
     gu, ["gu", "충전구분"],
-    ["month_seq", "year", "month", "avg_hour"],
+    ["month_seq", "year", "month"],
     ["gu", "충전구분", "month"], "gu", "자치구역 모델",
     log_target=True
 )
