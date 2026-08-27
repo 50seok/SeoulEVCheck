@@ -7,7 +7,7 @@ seaborn
 openpyxl
 joblib
 streamlit
-plotly
+plotly<7
 requests
 holidays
 python-docx
