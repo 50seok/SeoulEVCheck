@@ -11,4 +11,3 @@ plotly
 requests
 holidays
 python-docx
-ydata-profiling
